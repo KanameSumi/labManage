@@ -2,6 +2,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from .models import Member
 from .serializers import MemberSerializer
 
@@ -64,6 +65,8 @@ class MemberDetailView(APIView):
 
 # 在室状況更新
 class MemberPresentView(APIView):
+    permission_classes = [AllowAny]
+
     def patch(self, request, pk):
         try:
             member = Member.objects.get(pk=pk)

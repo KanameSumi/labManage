@@ -7,7 +7,10 @@ services:
             --transaction-isolation=READ-COMMITTED
         restart: always
         environment:
+            MYSQL_DATABASE: labmanage
             MYSQL_ROOT_PASSWORD: password
+            MYSQL_USER: labuser
+            MYSQL_PASSWORD: labpassword
             TZ: Asia/Tokyo
         ports:
             - 53307:3306

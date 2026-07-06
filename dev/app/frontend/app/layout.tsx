@@ -141,7 +141,7 @@ export default function InventoryLayout({
                             }}
                         >
                             <Typography variant="caption" color="white">
-                                ©2023 full stack web development
+                                ©2026 Lab Management System
                             </Typography>
                         </Box>
                     </Box>
