@@ -28,12 +28,23 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import StorageIcon from '@mui/icons-material/Storage';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import LogoutIcon from '@mui/icons-material/Logout'; // ログアウトアイコン
+import LogoutIcon from '@mui/icons-material/Logout';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 type FormData = {
     name: string;
     student_id: string;
     email: string;
+};
+
+type MemberData = {
+    id: number;
+    name: string;
+    student_id: string;
+    is_present: boolean;
+    status: number;
+    updated_at: string;
 };
 
 export default function Page() {
@@ -43,9 +54,12 @@ export default function Page() {
     const [isLoggedIn, setIsLoggedIn] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>();
+    const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormData>();
     const [apiError, setApiError] = useState("");
     const [apiSuccess, setApiSuccess] = useState("");
+    const [members, setMembers] = useState<MemberData[]>([]);
+    const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
+    const [memberLoading, setMemberLoading] = useState(false);
     const [loanLogs, setLoanLogs] = useState<Array<any>>([]);
     const [logsError, setLogsError] = useState("");
     const [csvFileName, setCsvFileName] = useState<string>("");
@@ -69,6 +83,25 @@ export default function Page() {
         sessionStorage.removeItem("isLoggedIn"); // セッションクリア
         router.replace("/login"); // ログイン画面へ
     };
+
+    const fetchMembers = async () => {
+        setMemberLoading(true);
+        try {
+            const res = await axios.get("/api/member/all/");
+            setMembers(res.data || []);
+        } catch (err: any) {
+            console.error(err);
+            setApiError(err?.response?.data?.detail || "メンバー一覧の取得に失敗しました。");
+        } finally {
+            setMemberLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isLoggedIn) {
+            void fetchMembers();
+        }
+    }, [isLoggedIn]);
 
     // 🔒 すべてのHooks宣言が終わった後に Early Return
     if (loading || !isLoggedIn) {
@@ -139,17 +172,61 @@ export default function Page() {
         setApiError("");
         setApiSuccess("");
         try {
-            const res = await axios.post("/api/member/", data);
+            const payload = {
+                name: data.name,
+                student_id: data.student_id,
+            };
+
+            const res = editingMemberId === null
+                ? await axios.post("/api/member/", payload)
+                : await axios.patch(`/api/member/${editingMemberId}/`, payload);
+
             if (res.status >= 200 && res.status < 300) {
-                setApiSuccess("メンバーを登録しました。");
-                reset();
+                setApiSuccess(editingMemberId === null ? "メンバーを登録しました。" : "メンバー情報を更新しました。" );
+                reset({ name: "", student_id: "", email: "" });
+                setEditingMemberId(null);
+                await fetchMembers();
             } else {
-                setApiError("登録に失敗しました。サーバーの応答を確認してください。");
+                setApiError("登録に失敗しました。サーバーの応答を確認してください。" );
             }
         } catch (err: any) {
             console.error(err);
             if (err?.response?.status !== 401) {
                 const msg = err?.response?.data?.message || err?.message || "登録に失敗しました。";
+                setApiError(String(msg));
+            }
+        }
+    };
+
+    const handleEditMember = (member: MemberData) => {
+        setEditingMemberId(member.id);
+        setValue("name", member.name);
+        setValue("student_id", member.student_id);
+        setValue("email", "");
+        setApiError("");
+        setApiSuccess("");
+    };
+
+    const handleCancelEdit = () => {
+        setEditingMemberId(null);
+        reset({ name: "", student_id: "", email: "" });
+    };
+
+    const handleDeleteMember = async (memberId: number) => {
+        if (!window.confirm("このメンバーを削除しますか？")) {
+            return;
+        }
+
+        try {
+            const res = await axios.delete(`/api/member/${memberId}/`);
+            if (res.status === 204) {
+                setApiSuccess("メンバーを削除しました。" );
+                await fetchMembers();
+            }
+        } catch (err: any) {
+            console.error(err);
+            if (err?.response?.status !== 401) {
+                const msg = err?.response?.data?.detail || err?.message || "削除に失敗しました。";
                 setApiError(String(msg));
             }
         }
@@ -182,7 +259,14 @@ export default function Page() {
                         メンバーの個別登録・一括管理、および機材の貸出状況の確認ができます。
                     </Typography>
                 </Box>
-                {/* 🔴 ログアウトボタン */}
+                {/* ログアウトボタン */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                    }}
+                >
                 <Button 
                     variant="outlined" 
                     color="error" 
@@ -191,6 +275,15 @@ export default function Page() {
                 >
                     ログアウト
                 </Button>
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                        sx={{ mt: 0.5, textAlign: "center" }}
+                    >
+                        ※ 画面遷移で自動的にログアウト
+                    </Typography>
+                </Box>
             </Box>
 
             {apiError && <Alert severity="error" sx={{ mb: 2 }}>{apiError}</Alert>}
@@ -212,7 +305,7 @@ export default function Page() {
 
                                 <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ display: "grid", gap: 2 }}>
                                     <TextField
-                                        label="氏名"
+                                        placeholder="氏名"
                                         variant="outlined"
                                         fullWidth
                                         size="small"
@@ -221,7 +314,7 @@ export default function Page() {
                                         helperText={errors.name?.message?.toString() || ""}
                                     />
                                     <TextField
-                                        label="学籍番号"
+                                        placeholder="学籍番号"
                                         variant="outlined"
                                         fullWidth
                                         size="small"
@@ -233,9 +326,62 @@ export default function Page() {
                                         helperText={errors.student_id?.message?.toString() || "例: a00000"}
                                     />
                                     <Button type="submit" variant="contained" fullWidth sx={{ mt: 1 }}>
-                                        メンバーを登録
+                                        {editingMemberId === null ? "メンバーを登録" : "内容を更新"}
                                     </Button>
+                                    {editingMemberId !== null && (
+                                        <Button variant="outlined" color="inherit" onClick={handleCancelEdit}>
+                                            編集をキャンセル
+                                        </Button>
+                                    )}
                                 </Box>
+
+                                <Divider sx={{ my: 3 }} />
+
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                    <Typography variant="subtitle1" fontWeight="bold">登録済みメンバー一覧</Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {memberLoading ? "読み込み中..." : `${members.length}人`}
+                                    </Typography>
+                                </Box>
+
+                                <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 320, overflow: 'auto' }}>
+                                    <Table size="small" stickyHeader>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>氏名</TableCell>
+                                                <TableCell>学籍番号</TableCell>
+                                                <TableCell align="right">操作</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {members.map((member) => (
+                                                <TableRow key={member.id} hover>
+                                                    <TableCell>{member.name}</TableCell>
+                                                    <TableCell>{member.student_id}</TableCell>
+                                                    <TableCell align="right">
+                                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1 }}>
+                                                            <Button size="small" startIcon={<EditIcon />} onClick={() => handleEditMember(member)}>
+                                                                編集
+                                                            </Button>
+                                                            <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => handleDeleteMember(member.id)}>
+                                                                削除
+                                                            </Button>
+                                                        </Box>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {members.length === 0 && !memberLoading && (
+                                                <TableRow>
+                                                    <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            メンバーが登録されていません。
+                                                        </Typography>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
                             </CardContent>
                         </Card>
 

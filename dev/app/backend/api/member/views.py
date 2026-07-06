@@ -5,29 +5,62 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Member
 from .serializers import MemberSerializer
 
-# リスト表示
+
 class MemberListView(APIView):
     authentication_classes = []
+
     def get(self, request, format=None):
         members = Member.objects.all()
-
-        serializer = MemberSerializer(
-            members,
-            many=True
-        )
-
+        serializer = MemberSerializer(members, many=True)
         return Response(serializer.data)
 
-# Member作成（管理画面用、認証必須）
+
 class MemberCreateView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request):
         serializer = MemberSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MemberDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk):
+        try:
+            return Member.objects.get(pk=pk)
+        except Member.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        member = self.get_object(pk)
+        if member is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = MemberSerializer(member)
+        return Response(serializer.data)
+
+    def patch(self, request, pk):
+        member = self.get_object(pk)
+        if member is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = MemberSerializer(member, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        member = self.get_object(pk)
+        if member is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        member.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 # 在室状況更新
 class MemberPresentView(APIView):
