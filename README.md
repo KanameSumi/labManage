@@ -3,7 +3,7 @@
 
 docker compose up -d
 
-1. MySQLで `db_init.sql` を実行し、データベースとユーザーを作成する。
+1. MySQLでデータベースを作成し、`db_init.sql` を実行する。
 2. Backend ディレクトリへ移動する。
 3. 以下のコマンドを実行する。
 
@@ -24,3 +24,5 @@ yarn dev
 
 - ユーザー名: `t-yamada`
 - パスワード: `LabPassword`
+
+Dev Containers 拡張機能を使ってセットアップしてください
