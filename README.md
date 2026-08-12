@@ -8,6 +8,7 @@ docker compose up -d
 3. 以下のコマンドを実行する。
 
 ```bash
+pip install -r requirements.txt
 python manage.py migrate --settings=config.settings.development
 python manage.py shell --settings=config.settings.development < create_admin.py
 python manage.py runserver --settings=config.settings.development
