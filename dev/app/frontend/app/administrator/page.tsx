@@ -1,13 +1,12 @@
 'use client'
 
 import axios from "../../plugins/axios";
-import { useEffect, useState, ChangeEvent } from "react";
+import { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import {
     Box,
     Button,
-    Container,
     CssBaseline,
     TextField,
     Typography,
@@ -15,7 +14,6 @@ import {
     Card,
     CardContent,
     Divider,
-    Grid,
     Stack,
     Table,
     TableBody,
@@ -140,7 +138,7 @@ export default function Page() {
         setCsvResult(null);
     };
 
-    const importCsv = async (e?: React.FormEvent) => {
+    const importCsv = async (e?: FormEvent<HTMLFormElement>) => {
         e?.preventDefault?.();
         setCsvResult(null);
         setCsvLoading(true);
@@ -246,13 +244,13 @@ export default function Page() {
     };
 
     return (
-        <Container component="main" maxWidth="xl" sx={{ py: 4 }}>
+        <Box component="main" sx={{ maxWidth: '1536px', mx: 'auto', px: 2, py: 4 }}>
             <CssBaseline />
 
             {/* ヘッダーエリア：右端にログアウトボタンを配置 */}
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <Box>
-                    <Typography component="h1" variant="h4" fontWeight="bold" color="primary.main">
+                    <Typography component="h1" variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
                         管理者ダッシュボード
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -277,11 +275,9 @@ export default function Page() {
                 </Button>
                     <Typography
                         variant="caption"
-                        color="text.secondary"
-                        display="block"
-                        sx={{ mt: 0.5, textAlign: "center" }}
+                        sx={{ color: 'text.secondary', display: 'block', mt: 0.5, textAlign: 'center' }}
                     >
-                        ※ 画面遷移で自動的にログアウト
+                        ※ タブを閉じると自動的にログアウト
                     </Typography>
                 </Box>
             </Box>
@@ -289,9 +285,9 @@ export default function Page() {
             {apiError && <Alert severity="error" sx={{ mb: 2 }}>{apiError}</Alert>}
             {apiSuccess && <Alert severity="success" sx={{ mb: 2 }}>{apiSuccess}</Alert>}
 
-            <Grid container spacing={3}>
+            <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', md: '5fr 7fr' } }}>
                 {/* 左側：登録エリア */}
-                <Grid size={{ xs: 12, md: 5 }}>
+                <Box>
                     <Stack spacing={3}>
 
                         {/* 手動登録カード */}
@@ -299,7 +295,7 @@ export default function Page() {
                             <CardContent>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                                     <PersonAddIcon color="primary" />
-                                    <Typography variant="h6" fontWeight="bold">個別メンバー登録</Typography>
+                                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>個別メンバー登録</Typography>
                                 </Box>
                                 <Divider sx={{ mb: 3 }} />
 
@@ -338,7 +334,7 @@ export default function Page() {
                                 <Divider sx={{ my: 3 }} />
 
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                    <Typography variant="subtitle1" fontWeight="bold">登録済みメンバー一覧</Typography>
+                                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>登録済みメンバー一覧</Typography>
                                     <Typography variant="caption" color="text.secondary">
                                         {memberLoading ? "読み込み中..." : `${members.length}人`}
                                     </Typography>
@@ -390,7 +386,7 @@ export default function Page() {
                             <CardContent>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                                     <CloudUploadIcon color="primary" />
-                                    <Typography variant="h6" fontWeight="bold">CSVから一括登録</Typography>
+                                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>CSVから一括登録</Typography>
                                 </Box>
                                 <Divider sx={{ mb: 2 }} />
 
@@ -427,13 +423,13 @@ export default function Page() {
 
                                 {csvResult && (
                                     <Box sx={{ mt: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                                        <Typography variant="subtitle2" fontWeight="bold">
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
                                             処理結果: 成功 {csvResult.success} 件 / 失敗 {csvResult.failed} 件
                                         </Typography>
                                         {csvResult.errors.length > 0 && (
                                             <Box sx={{ mt: 1, maxHeight: 120, overflowY: 'auto' }}>
                                                 {csvResult.errors.map((err, i) => (
-                                                    <Typography key={i} variant="caption" color="error" display="block">
+                                                    <Typography key={i} variant="caption" sx={{ color: 'error.main', display: 'block' }}>
                                                         {err}
                                                     </Typography>
                                                 ))}
@@ -445,16 +441,16 @@ export default function Page() {
                         </Card>
 
                     </Stack>
-                </Grid>
+                </Box>
 
                 {/* 右側：貸出記録エリア */}
-                <Grid xs={12} md={7}>
+                <Box>
                     <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <StorageIcon color="primary" />
-                                    <Typography variant="h6" fontWeight="bold">機材貸出記録履歴</Typography>
+                                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>機材貸出記録履歴</Typography>
                                 </Box>
                                 <Button variant="contained" size="small" onClick={fetchLoanLogs}>
                                     ログ最新化
@@ -498,8 +494,8 @@ export default function Page() {
                             )}
                         </CardContent>
                     </Card>
-                </Grid>
-            </Grid>
-        </Container>
+                </Box>
+            </Box>
+        </Box>
     );
 }

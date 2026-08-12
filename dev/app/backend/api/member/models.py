@@ -8,8 +8,8 @@ class Member(models.Model):
 
     STATUS_CHOICES = [
         (0, "未登録"),
-        (1, "在室予定あり"),
-        (2, "在室予定なし"),
+        (1, "来室予定あり"),
+        (2, "来室予定なし"),
     ]
 
     status = models.IntegerField(
