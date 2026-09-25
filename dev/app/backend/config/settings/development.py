@@ -3,7 +3,7 @@ from .base import *
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'app',
+        'NAME': 'labmanage',
         'USER': 'root',
         'PASSWORD': 'password',
         'HOST': 'host.docker.internal',

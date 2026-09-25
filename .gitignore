@@ -12,3 +12,14 @@ __pycache__/
 # Python virtual environment
 venv/
 .env
+# Virtual environment
+.venv-clean/
+
+# Local database
+db.sqlite3
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# PDF files
+*.pdf
